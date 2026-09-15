@@ -77,6 +77,11 @@ jobs:
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          # Auto-enable GitHub Actions as the Pages source so the workflow
+          # works without manually setting "Pages -> Source = GitHub Actions"
+          # in the repo settings (otherwise configure-pages returns "Not Found").
+          enablement: always
 
       - name: Deploy
         id: deployment

@@ -1,0 +1,12 @@
+node_modules
+.toolchain/node_modules
+.toolchain/*.log
+*.log
+.DS_Store
+.vite/
+playwright-report/
+test-results/
+coverage/
+dist/
+site/
+.tmp/

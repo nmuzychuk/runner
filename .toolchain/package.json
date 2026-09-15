@@ -1,0 +1,22 @@
+{
+  "name": "air-raid-runner-toolchain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Dev toolchain for Air Raid Runner (three.js rendering + vitest/playwright tests). Kept isolated in .toolchain so the static site stays dependency-free.",
+  "scripts": {
+    "vendor": "node vendor.mjs",
+    "serve": "node ../tests/e2e/server.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@picocss/pico": "^2.0.6",
+    "@playwright/test": "^1.49.1",
+    "playwright": "^1.49.1",
+    "three": "^0.169.0",
+    "vitest": "^2.1.8"
+  }
+}

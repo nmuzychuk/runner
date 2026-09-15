@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Air Raid Runner</title>
+    <meta name="description" content="An endless runner set during an air-raid alarm in a Ukrainian city. Reach the shelter." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231f7a4d'/><text x='50' y='68' font-size='60' text-anchor='middle' font-family='sans-serif' font-weight='bold' fill='%23eafff2'>S</text></svg>" />
+    <link rel="stylesheet" href="vendor/pico.min.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <!-- Resolve the bare `three` import used by our ES modules to the vendored build. -->
+    <script type="importmap">
+      { "imports": { "three": "./vendor/three.module.js" } }
+    </script>
+  </head>
+  <body>
+    <div id="app" data-testid="app">
+      <canvas id="game" data-testid="canvas"></canvas>
+
+      <!-- HUD: one right-aligned flex row. Source order = [score][lives]
+           [distance][actions]; with `justify-content: flex-end` that group is
+           pushed to the right, so it renders left→right as
+           [Score][Lives][Distance][lang][pause][mute] — the action buttons
+           hug the right edge at every width and the row wraps on narrow
+           screens. -->
+      <header id="hud" data-testid="hud" aria-live="polite">
+        <div class="hud-block hud-left">
+          <div class="hud-label" data-i18n="hud_score">Score</div>
+          <div class="hud-value" id="score" data-testid="score">0</div>
+        </div>
+        <div class="hud-block hud-mid">
+          <div class="hud-label" data-i18n="hud_lives">Lives</div>
+          <div class="hud-value hud-lives" id="lives" data-testid="lives">❤❤❤</div>
+        </div>
+        <div class="hud-block hud-right">
+          <div class="hud-label" data-i18n="hud_distance">Distance</div>
+          <div class="hud-value" id="distance" data-testid="distance">0 m</div>
+          <div class="hud-sub" id="collected" data-testid="collected"></div>
+        </div>
+        <div class="hud-actions" data-testid="hud-actions">
+          <button id="lang-btn" class="hud-btn hud-btn-lang" data-testid="lang-btn"
+                  aria-label="Switch language">UK</button>
+          <button id="pause-btn" class="hud-btn" data-testid="pause-btn"
+                  data-i18n-aria="pause_aria" aria-label="Pause or resume (Esc)" disabled>⏸ Pause</button>
+          <button id="mute-btn" class="hud-btn" data-testid="mute-btn"
+                  data-i18n-aria="mute_aria" aria-label="Toggle sound (M)" aria-pressed="false">🔊</button>
+        </div>
+      </header>
+
+      <!-- Hit flash overlay -->
+      <div id="hit-flash" data-testid="hit-flash" aria-hidden="true"></div>
+
+      <!-- Menu / game over overlay -->
+      <div id="overlay" class="overlay" data-testid="overlay">
+        <section class="card overlay-card">
+          <h1 id="overlay-title" data-testid="overlay-title" class="overlay-title">Air Raid Runner</h1>
+          <p id="overlay-text" data-testid="overlay-text" class="overlay-text"></p>
+          <div id="legend" class="legend" data-testid="legend" hidden>
+            <div class="legend-group">
+              <div class="legend-group-title good" data-i18n="legend_grab">Grab — helps</div>
+              <ul class="legend-list">
+                <li><span class="lg-icon">📱</span><span data-i18n="legend_phone">Phone</span><em data-i18n="legend_phone_pts">+250 pts</em></li>
+                <li><span class="lg-icon">🔦</span><span data-i18n="legend_flash">Flashlight</span><em data-i18n="legend_flash_pts">+150 pts</em></li>
+                <li><span class="lg-icon">💧</span><span data-i18n="legend_water">Water</span><em data-i18n="legend_water_pts">+50 pts</em></li>
+                <li><span class="lg-icon">✚</span><span data-i18n="legend_aid">First-aid</span><em data-i18n="legend_aid_pts">+1 life</em></li>
+              </ul>
+            </div>
+            <div class="legend-group">
+              <div class="legend-group-title bad" data-i18n="legend_dodge">Dodge — costs a life</div>
+              <ul class="legend-list">
+                <li><span class="lg-icon">🪨</span><span data-i18n="legend_debris">Debris</span></li>
+                <li><span class="lg-icon">🚗</span><span data-i18n="legend_car">Wrecked car</span></li>
+                <li><span class="lg-icon">🚧</span><span data-i18n="legend_barricade">Barricade</span></li>
+                <li><span class="lg-icon">🛸</span><span data-i18n="legend_drone">Drone</span></li>
+              </ul>
+            </div>
+          </div>
+          <button id="primary-btn" class="btn btn-primary btn-lg" data-testid="start-btn">Start</button>
+          <button id="menu-lang-btn" class="btn btn-subtle menu-lang-btn" data-testid="menu-lang-btn"
+                  data-i18n-aria="lang_aria" aria-label="Switch language">EN</button>
+          <p id="hint" class="hint" data-testid="hint"></p>
+        </section>
+      </div>
+
+      <!-- Best score chip -->
+      <div id="best" class="best-chip" data-testid="best">
+        <span data-i18n="best">Best</span> <b id="best-val" data-testid="best-val">0</b>
+      </div>
+
+      <!-- Mobile swipe hint (visible only on coarse-pointer devices) -->
+      <div id="swipe-hint" class="swipe-hint" data-testid="swipe-hint" data-i18n="swipe_hint">Swipe ← → to change lanes · tap ⏸ to pause</div>
+    </div>
+
+    <script type="module" src="js/app/main.js"></script>
+  </body>
+</html>

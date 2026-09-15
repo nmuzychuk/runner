@@ -1,0 +1,330 @@
+/* Air Raid Runner — app-level layout & theming.
+   Pico CSS handles base elements; this file adds the game shell. */
+
+:root {
+  --sky: #0d1017;
+  --panel: rgba(10, 12, 18, 0.72);
+  --ink: #e8edf2;
+  --muted: #93a0b0;
+  --accent: #2fbf71;
+  --danger: #ff5a4d;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--sky);
+  color: var(--ink);
+  overflow: hidden;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+#game {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  touch-action: none;
+}
+
+/* --- HUD top bar ---
+   One flex row, right-aligned. The stat blocks + the action group (language /
+   pause / mute) all live in the same row so the layout holds at every width:
+   the whole cluster hugs the right, and on narrow screens it wraps instead of
+   overflowing. `#hud` stays click-through (pointer-events: none) so the 3D
+   canvas beneath is unaffected; the buttons re-enable pointer events on
+   `.hud-actions` below. */
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  row-gap: 8px;
+  padding: 10px 14px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.hud-block {
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 6px 12px;
+  min-width: 78px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.hud-left { text-align: left; }
+.hud-mid  { text-align: center; }
+.hud-right { text-align: right; }
+
+.hud-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hud-value {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-lives { color: var(--danger); font-size: 20px; }
+.hud-sub { font-size: 15px; min-height: 18px; color: var(--ink); }
+
+/* --- HUD action buttons (language / pause / mute) ---
+   Inline flex group at the right end of the #hud row (no longer absolutely
+   positioned). pointer-events: auto makes them actually clickable — the parent
+   #hud is pointer-events:none, so without this the buttons were mouse-inert
+   (keyboard-only). */
+.hud-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  pointer-events: auto;
+  z-index: 6;
+}
+
+.hud-btn {
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  min-height: 36px;
+}
+
+.hud-btn:hover:not(:disabled) {
+  background: rgba(20, 24, 32, 0.9);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.hud-btn:disabled { opacity: 0.4; cursor: default; }
+
+.hud-btn[aria-pressed="true"] {
+  background: rgba(47, 191, 113, 0.15);
+  border-color: rgba(47, 191, 113, 0.4);
+}
+
+/* --- Mobile swipe hint --- */
+.swipe-hint {
+  display: none;
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+  pointer-events: none;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 4;
+}
+
+@media (pointer: coarse) {
+  .swipe-hint { display: block; }
+}
+
+/* --- Hit flash overlay --- */
+#hit-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 4;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 90, 77, 0.0) 40%,
+    rgba(255, 60, 45, 0.55) 100%
+  );
+  transition: opacity 80ms linear;
+}
+
+/* --- Menu / game over overlay --- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  background: rgba(6, 8, 12, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.overlay.hidden { display: none; }
+
+.overlay-card {
+  max-width: 420px;
+  margin: 0 16px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.overlay-title {
+  font-size: 28px;
+  margin: 0 0 12px;
+}
+
+.overlay-text {
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0 0 20px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #06130c;
+  border: none;
+  font-weight: 700;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background: #3fd484;
+  color: #06130c;
+  box-shadow: 0 6px 20px rgba(47, 191, 113, 0.35);
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 16px 0 0;
+}
+
+/* Language toggle on the start menu — compact, secondary, sits between the
+   primary Start button and the controls hint. */
+.menu-lang-btn {
+  width: 100%;
+  margin: 12px 0 0;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.menu-lang-btn:hover,
+.menu-lang-btn:focus {
+  color: #eafff2;
+  border-color: var(--accent);
+  background: rgba(47, 191, 113, 0.12);
+}
+
+/* --- In-game legend (menu only) --- */
+.legend {
+  display: flex;
+  gap: 14px;
+  margin: 0 0 20px;
+  text-align: left;
+}
+
+.legend-group {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.legend-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.legend-group-title.good { color: var(--accent); }
+.legend-group-title.bad { color: var(--danger); }
+
+.legend-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.legend-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.legend-list li em {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.lg-icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+  flex: none;
+}
+
+@media (max-width: 460px) {
+  .legend { flex-direction: column; gap: 10px; }
+}
+
+/* --- Best score chip --- */
+.best-chip {
+  position: absolute;
+  bottom: 12px;
+  right: 16px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--muted);
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 4px 12px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.best-chip b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 560px) {
+  #hud { padding: 8px 10px; gap: 6px 8px; }
+  .hud-value { font-size: 18px; }
+  .hud-block { min-width: 58px; padding: 5px 9px; }
+  .hud-btn { padding: 6px 9px; font-size: 13px; min-height: 32px; }
+}

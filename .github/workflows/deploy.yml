@@ -1,0 +1,83 @@
+name: Test & Deploy
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Unit + E2E tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install toolchain deps (isolated in .toolchain/)
+        working-directory: .toolchain
+        run: npm ci
+
+      # The repo uses a root-level `node_modules` -> `.toolchain/node_modules`
+      # symlink so that `npx` from the root can resolve vitest/playwright.
+      # GitHub Actions runs in a fresh container, so re-create it here.
+      - name: Re-create root node_modules symlink
+        run: ln -s .toolchain/node_modules node_modules
+
+      - name: Unit tests (vitest)
+        run: npx vitest run
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E tests (Playwright)
+        run: npx playwright test
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Stage only the files the browser actually needs. `upload-pages-artifact`
+      # cannot exclude paths, and it rejects symbolic links, so build a clean
+      # `site/` directory instead of pointing at the repo root (which contains
+      # the `node_modules` -> `.toolchain/node_modules` symlink and dev files).
+      - name: Stage static site
+        run: |
+          set -euo pipefail
+          rm -rf site
+          mkdir -p site/css site/js site/vendor
+          cp index.html site/
+          cp README.md site/
+          cp -R css/. site/css/
+          cp -R js/.  site/js/
+          cp -R vendor/. site/vendor/
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
